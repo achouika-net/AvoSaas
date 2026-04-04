@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Center {
+  id        String       @id @default(uuid())
+  name      String
+  address   String?
+  createdAt DateTime     @default(now())
+  cases     Case[]
+  clients   Client[]
+  users     UserCenter[]
+}
+
+model User {
+  id        String       @id @default(uuid())
+  name      String
+  email     String       @unique
+  password  String
+  role      String       @default("LAWYER")
+  createdAt DateTime     @default(now())
+  centers   UserCenter[]
+}
+
+model UserCenter {
+  userId   String
+  centerId String
+  center   Center @relation(fields: [centerId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@id([userId, centerId])
+}
+
+model Client {
+  id             String    @id @default(uuid())
+  name           String
+  type           String
+  identityNumber String?
+  phone          String?
+  email          String?
+  address        String?
+  status         String    @default("ACTIVE")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  centerId       String
+  cases          Case[]
+  center         Center    @relation(fields: [centerId], references: [id])
+  invoices       Invoice[]
+}
+
+model Case {
+  id                 String        @id @default(uuid())
+  title              String
+  type               String
+  courtName          String
+  opponentName       String?
+  primaryNumber      String?
+  appealNumber       String?
+  supremeCourtNumber String?
+  status             String        @default("ONGOING")
+  currentStage       String        @default("PRIMARY")
+  clientId           String
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  centerId           String
+  appointments       Appointment[]
+  center             Center        @relation(fields: [centerId], references: [id])
+  client             Client        @relation(fields: [clientId], references: [id])
+  documents          Document[]
+  expenses           Expense[]
+}
+
+model Appointment {
+  id          String   @id @default(uuid())
+  title       String
+  date        DateTime
+  type        String
+  caseId      String?
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  case        Case?    @relation(fields: [caseId], references: [id])
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  caseId    String
+  createdAt DateTime @default(now())
+  case      Case     @relation(fields: [caseId], references: [id])
+}
+
+model Expense {
+  id        String   @id @default(uuid())
+  title     String
+  amount    Float
+  type      String
+  caseId    String
+  createdAt DateTime @default(now())
+  case      Case     @relation(fields: [caseId], references: [id])
+}
+
+model Invoice {
+  id        String   @id @default(uuid())
+  amount    Float
+  status    String   @default("UNPAID")
+  clientId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client    Client   @relation(fields: [clientId], references: [id])
+}

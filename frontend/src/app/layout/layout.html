@@ -1,0 +1,106 @@
+<div dir="rtl" class="min-h-screen bg-dark-900 flex text-gray-100 font-sans">
+  
+  <!-- Sidebar -->
+  <aside class="w-64 bg-dark-800 border-l border-dark-700 flex flex-col transition-all duration-300">
+    <!-- Logo area -->
+    <div class="h-16 flex items-center px-6 border-b border-dark-700 backdrop-blur-md bg-dark-800/80">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary-500/30">
+        A
+      </div>
+      <span class="mr-3 text-lg font-bold tracking-wide text-white">Avo<span class="text-primary-500">Saas</span></span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-4 py-6 space-y-1">
+      <a routerLink="/dashboard" routerLinkActive="bg-primary-500/10 text-primary-500 border-primary-500/20" 
+         class="flex items-center px-4 py-2.5 text-gray-400 hover:text-white hover:bg-dark-700/50 rounded-lg transition-all text-sm font-medium border border-transparent">
+        <svg class="w-4 h-4 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        لوحة القيادة
+      </a>
+      
+      <a routerLink="/clients" routerLinkActive="bg-primary-500/10 text-primary-500 border-primary-500/20"
+         class="flex items-center px-4 py-2.5 text-gray-400 hover:text-white hover:bg-dark-700/50 rounded-lg transition-all text-sm font-medium border border-transparent">
+        <svg class="w-4 h-4 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        العملاء
+      </a>
+      
+      <a href="javascript:void(0)" class="flex items-center px-4 py-2.5 text-gray-400 hover:text-white hover:bg-dark-700/50 rounded-lg transition-all text-sm font-medium">
+        <svg class="w-4 h-4 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        القضايا والملفات
+      </a>
+
+      <a href="javascript:void(0)" class="flex items-center px-4 py-2.5 text-gray-400 hover:text-white hover:bg-dark-700/50 rounded-lg transition-all text-sm font-medium">
+        <svg class="w-4 h-4 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        المواعيد والجلسات
+      </a>
+
+      <a href="javascript:void(0)" class="flex items-center px-4 py-2.5 text-gray-400 hover:text-white hover:bg-dark-700/50 rounded-lg transition-all text-sm font-medium">
+        <svg class="w-4 h-4 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        المالية والفواتير
+      </a>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="p-4 border-t border-dark-700">
+      <button class="flex items-center w-full px-4 py-2 text-gray-400 hover:text-white hover:bg-dark-700/50 rounded-lg transition-all text-sm font-medium">
+        <svg class="w-4 h-4 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        إعدادات النظام
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content wrapper -->
+  <div class="flex-1 flex flex-col h-screen overflow-hidden">
+    <!-- Header -->
+    <header class="h-16 bg-dark-900 border-b border-dark-700 flex items-center justify-between px-8 z-10 sticky top-0 backdrop-blur-md bg-opacity-80">
+      
+      <div class="flex items-center space-x-6 space-x-reverse">
+        <!-- Search -->
+        <div class="relative w-96">
+          <input type="text" placeholder="بحث سريع عن قضية أو عميل..." class="w-full bg-dark-800 border border-dark-700 rounded-lg py-2 px-10 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all">
+          <svg class="w-4 h-4 text-gray-500 absolute top-2.5 right-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+
+        <!-- Center Selector -->
+        <div class="relative group">
+          <button class="flex items-center space-x-2 space-x-reverse bg-dark-800 border border-dark-700 px-4 py-2 rounded-lg text-sm text-gray-200 hover:bg-dark-700 transition">
+            <svg class="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            <span class="font-medium">مركز الدار البيضاء (الرئيسي)</span>
+            <svg class="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          
+          <div class="absolute right-0 mt-2 w-64 bg-dark-800 border border-dark-700 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
+            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-dark-700 hover:text-white">مركز الدار البيضاء (الرئيسي)</a>
+            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-dark-700 hover:text-white">فرع الرباط</a>
+            <div class="border-t border-dark-700 my-2"></div>
+            <a href="#" class="block px-4 py-2 text-sm text-primary-400 hover:bg-dark-700 transition-colors font-medium">إدارة المراكز...</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Header Actions -->
+      <div class="flex items-center space-x-5 space-x-reverse">
+        <!-- Notifications -->
+        <button class="relative p-2 text-gray-400 hover:text-white hover:bg-dark-800 rounded-lg transition-all" title="التنبيهات">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-dark-900"></span>
+        </button>
+        
+        <!-- User Profile -->
+        <div class="flex items-center pl-1 mr-2 border-r border-dark-700 pr-5">
+          <div class="text-left ml-3 hidden md:block">
+            <p class="text-sm font-bold text-white leading-tight">الأستاذ أحمد</p>
+            <p class="text-[11px] text-gray-500 leading-tight">مدير النظام</p>
+          </div>
+          <img src="https://ui-avatars.com/api/?name=Ahmed+Lawyer&background=1E1E1E&color=3B82F6" alt="Profile" class="w-10 h-10 rounded-lg border border-dark-700 shadow-sm">
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-dark-900 p-8">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+</div>

@@ -1,0 +1,52 @@
+<div class="fixed inset-0 bg-dark-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+  <div class="bg-dark-800 border border-dark-700 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+    <!-- Header -->
+    <div class="px-8 py-6 border-b border-dark-700 flex items-center justify-between bg-dark-800/50">
+      <div>
+        <h2 class="text-2xl font-bold text-white">توليد فاتورة</h2>
+        <p class="text-gray-400 text-sm mt-1">إصدار مطالبة مالية جديدة للعميل</p>
+      </div>
+      <button (click)="close()" 
+              title="إغلاق النافذة"
+              aria-label="إغلاق النافذة"
+              class="w-10 h-10 rounded-xl bg-dark-700 text-gray-400 hover:text-white transition-all flex items-center justify-center border border-dark-600">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <!-- Form Body -->
+    <div class="p-8 space-y-6 text-right">
+      <div class="space-y-2">
+        <label class="text-sm font-bold text-gray-300">المبلغ الإجمالي (درهم)</label>
+        <div class="relative">
+          <input [(ngModel)]="invoiceData.amount" type="number" placeholder="0.00"
+                 class="w-full bg-dark-900 border border-dark-600 rounded-xl px-12 py-3 text-white focus:border-primary-500 outline-none transition-all text-left font-mono">
+          <span class="absolute right-4 top-3.5 text-gray-500 font-bold">DH</span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-bold text-gray-300">حالة الفاتورة الأوليّة</label>
+        <select [(ngModel)]="invoiceData.status"
+                title="اختر حالة الفاتورة"
+                class="w-full bg-dark-900 border border-dark-600 rounded-xl px-4 py-3 text-white focus:border-primary-500 outline-none transition-all">
+          <option value="UNPAID">غير مدفوعة</option>
+          <option value="PARTIAL">مدفوعة جزئياً</option>
+          <option value="PAID">مدفوعة بالكامل</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="px-8 py-6 bg-dark-900/50 border-t border-dark-700 flex items-center justify-end gap-3">
+      <button (click)="close()" class="px-6 py-2.5 rounded-xl border border-dark-600 text-gray-400 hover:bg-dark-700 transition-all font-bold">
+        إلغاء
+      </button>
+      <button (click)="save()" [disabled]="isLoading || invoiceData.amount <= 0"
+              class="px-8 py-2.5 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 shadow-lg shadow-primary-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+        <i *ngIf="isLoading" class="pi pi-spin pi-spinner"></i>
+        {{ isLoading ? 'جاري الإصدار...' : 'توليد الفاتورة' }}
+      </button>
+    </div>
+  </div>
+</div>
