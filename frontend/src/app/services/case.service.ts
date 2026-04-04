@@ -11,6 +11,9 @@ export interface Case {
   primaryNumber?: string;
   appealNumber?: string;
   supremeCourtNumber?: string;
+  opponentLawyerName?: string;
+  opponentLawyerOffice?: string;
+  agreedFees?: number;
   status?: string;
   currentStage?: string;
   clientId: string;
@@ -44,5 +47,29 @@ export class CaseService {
 
   deleteCase(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  getNiyabaTemplate(caseData: Case, lawyerName: string = 'الأستاذ أحمد'): string {
+    const today = new Date().toLocaleDateString('ar-MA');
+    return `
+نيابة
+
+لفائدة: ${lawyerName}
+المحامي بهيئة الدار البيضاء
+المقبول لدى محكمة النقض
+
+ضد: ${caseData.opponentName || '........'}
+ومحاميه: ${caseData.opponentLawyerName || '........'}
+
+الموضوع: ${caseData.title}
+رقم الملف: ${caseData.primaryNumber || '........'}
+
+يشرفني أن أخبركم أنني أنوب عن السيد(ة): ${caseData.clientId} (المدعي)
+في القضية المشار إليها أعلاه، والمرفوعة ضد ${caseData.opponentName || '........'}.
+
+حرر بـ ${caseData.courtName.split(' ')[2] || 'الدار البيضاء'} في ${today}
+
+توقيع المحامي
+    `;
   }
 }

@@ -46,8 +46,9 @@ export const createCase = async (req: Request, res: Response) => {
   try {
     const { 
       title, type, courtName, opponentName, 
+      opponentLawyerName, opponentLawyerOffice, agreedFees,
       primaryNumber, appealNumber, supremeCourtNumber, 
-      clientId, centerId 
+      clientId, centerId, currentStage
     } = req.body;
 
     const newCase = await prisma.case.create({
@@ -56,11 +57,15 @@ export const createCase = async (req: Request, res: Response) => {
         type,
         courtName,
         opponentName,
+        opponentLawyerName,
+        opponentLawyerOffice,
+        agreedFees: agreedFees ? Number(agreedFees) : 0,
         primaryNumber,
         appealNumber,
         supremeCourtNumber,
         clientId,
-        centerId
+        centerId,
+        currentStage: currentStage || 'FIRST_INSTANCE'
       }
     });
     res.status(201).json(newCase);

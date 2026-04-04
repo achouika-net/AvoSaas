@@ -62,8 +62,11 @@ model Case {
   primaryNumber      String?
   appealNumber       String?
   supremeCourtNumber String?
+  opponentLawyerName  String?
+  opponentLawyerOffice String?
+  agreedFees          Float?        @default(0)
   status             String        @default("ONGOING")
-  currentStage       String        @default("PRIMARY")
+  currentStage       String        @default("FIRST_INSTANCE")
   clientId           String
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt

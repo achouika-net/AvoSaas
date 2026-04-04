@@ -45,6 +45,7 @@ export class ClientDetailComponent implements OnInit {
   selectedCaseIdForDoc: string = '';
   docTitle: string = '';
   isUploadingDoc = false;
+  generatedNiyaba: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -240,11 +241,32 @@ export class ClientDetailComponent implements OnInit {
     switch (type) {
       case 'CIVIL': return 'مدني';
       case 'COMMERCIAL': return 'تجاري';
-      case 'CRIMINAL': return 'جنائي';
+      case 'CRIMINAL': return 'جنحي';
+      case 'TRAFFIC': return 'سير';
       case 'FAMILY': return 'أسرة';
       case 'ADMINISTRATIVE': return 'إداري';
       default: return type;
     }
+  }
+
+  getCaseStageLabel(stage?: string): string {
+    switch (stage) {
+      case 'FIRST_INSTANCE': return 'المحكمة الابتدائية';
+      case 'APPEAL': return 'الاستئناف';
+      case 'SUPREME': return 'النقض';
+      default: return stage || 'غير معروف';
+    }
+  }
+
+  generateNiyaba(caseData: Case) {
+    this.generatedNiyaba = this.caseService.getNiyabaTemplate(caseData, 'الأستاذ أحمد');
+    this.activeTab = 'SUMMARY'; // Show it in summary or just stay here
+    this.cdr.detectChanges();
+  }
+
+  closeNiyaba() {
+    this.generatedNiyaba = null;
+    this.cdr.detectChanges();
   }
 
   formatCurrency(amount: number): string {

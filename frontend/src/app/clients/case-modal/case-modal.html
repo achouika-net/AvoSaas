@@ -1,75 +1,117 @@
-<div class="fixed inset-0 bg-dark-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-  <div class="bg-dark-800 border border-dark-700 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-dark-800 border border-dark-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in RTL">
     <!-- Header -->
-    <div class="px-8 py-6 border-b border-dark-700 flex items-center justify-between bg-dark-800/50">
-      <div>
-        <h2 class="text-2xl font-bold text-white">إضافة قضية جديدة</h2>
-        <p class="text-gray-400 text-sm mt-1">أدخل بيانات الملف القضائي للعميل</p>
-      </div>
-      <button (click)="close()" 
-              title="إغلاق النافذة"
-              aria-label="إغلاق النافذة"
-              class="w-10 h-10 rounded-xl bg-dark-700 text-gray-400 hover:text-white transition-all flex items-center justify-center border border-dark-600">
+    <div class="p-6 border-b border-dark-700 flex justify-between items-center bg-dark-900/50">
+      <h3 class="text-xl font-bold text-white flex items-center gap-2">
+        <i class="pi pi-briefcase text-primary-500"></i>
+        إضافة قضية جديدة
+      </h3>
+      <button (click)="close()" class="text-gray-400 hover:text-white transition-colors">
         <i class="pi pi-times"></i>
       </button>
     </div>
 
-    <!-- Form Body -->
-    <div class="p-8 space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Title -->
-        <div class="space-y-2 md:col-span-2">
-          <label class="text-sm font-bold text-gray-300">اسم القضية / موضوع النزاع</label>
-          <input [(ngModel)]="caseData.title" type="text" placeholder="مثال: نزاع حول ملكية عقار"
-                 class="w-full bg-dark-900 border border-dark-600 rounded-xl px-4 py-3 text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-all">
-        </div>
+    <!-- Form -->
+    <div class="p-6 space-y-6">
+      <!-- Title -->
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-2">اسم القضية / موضوعها</label>
+        <input [(ngModel)]="caseData.title" type="text" placeholder="مثال: نزاع عقاري بالدار البيضاء"
+               class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all">
+      </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Type -->
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-300">نوع التقاضي</label>
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">نوع التقاضي</label>
           <select [(ngModel)]="caseData.type"
-                  title="اختر نوع التقاضي"
-                  class="w-full bg-dark-900 border border-dark-600 rounded-xl px-4 py-3 text-white focus:border-primary-500 outline-none transition-all">
+                  class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all cursor-pointer">
             <option value="CIVIL">مدني</option>
+            <option value="CRIMINAL">جنحي</option>
+            <option value="TRAFFIC">سير</option>
             <option value="COMMERCIAL">تجاري</option>
-            <option value="CRIMINAL">جنائي</option>
-            <option value="FAMILY">أسرة</option>
             <option value="ADMINISTRATIVE">إداري</option>
+            <option value="FAMILY">أسرة</option>
           </select>
         </div>
 
-        <!-- Court Name -->
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-300">المحكمة المختصة</label>
-          <input [(ngModel)]="caseData.courtName" type="text" placeholder="مثال: المحكمة الابتدائية بالدار البيضاء"
-                 class="w-full bg-dark-900 border border-dark-600 rounded-xl px-4 py-3 text-white focus:border-primary-500 outline-none transition-all">
+        <!-- Court Name with Dropdown -->
+        <div class="relative">
+          <label class="block text-sm font-medium text-gray-400 mb-2">المحكمة المختصة</label>
+          <input [(ngModel)]="caseData.courtName" (input)="filterCourts($event)" (focus)="showCourtDropdown = true"
+                 type="text" placeholder="ابحث عن المحكمة..."
+                 class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all">
+          
+          <div *ngIf="showCourtDropdown && filteredCourts.length > 0" 
+               class="absolute z-50 w-full mt-2 bg-dark-700 border border-dark-600 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+            <div *ngFor="let court of filteredCourts" 
+                 (click)="selectCourt(court)"
+                 class="px-4 py-3 hover:bg-dark-600 cursor-pointer text-gray-200 border-b border-dark-600 last:border-0 transition-colors">
+              <div class="font-medium">{{ court.name }}</div>
+              <div class="text-xs text-gray-500">{{ court.city }} - {{ court.type }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opponent Info Section -->
+      <div class="bg-dark-900/30 p-4 rounded-xl border border-dark-700/50 space-y-4">
+        <h4 class="text-sm font-bold text-primary-400 flex items-center gap-2 mb-2">
+          <i class="pi pi-users"></i>
+          بيانات الطرف الخصم
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">اسم الخصم</label>
+            <input [(ngModel)]="caseData.opponentName" type="text"
+                   class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">محامي الخصم</label>
+            <input [(ngModel)]="caseData.opponentLawyerName" type="text"
+                   class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-400 mb-2">مكتب محامي الخصم / معلومات التواصل</label>
+            <input [(ngModel)]="caseData.opponentLawyerOffice" type="text"
+                   class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Fees -->
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">الأتعاب المتفق عليها (درهم)</label>
+          <div class="relative">
+            <input [(ngModel)]="caseData.agreedFees" type="number"
+                   class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all pr-12">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">DH</span>
+          </div>
         </div>
 
-        <!-- Opponent -->
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-300">الطرف الخصم</label>
-          <input [(ngModel)]="caseData.opponentName" type="text" placeholder="اسم الخصم الكامل"
-                 class="w-full bg-dark-900 border border-dark-600 rounded-xl px-4 py-3 text-white focus:border-primary-500 outline-none transition-all">
-        </div>
-
-        <!-- Primary Number -->
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-300">رقم الملف الابتدائي</label>
-          <input [(ngModel)]="caseData.primaryNumber" type="text" placeholder="مثال: 2024/1203/45"
-                 class="w-full bg-dark-900 border border-dark-600 rounded-xl px-4 py-3 text-white focus:border-primary-500 outline-none transition-all">
+        <!-- Case Stage -->
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">مرحلة التقاضي</label>
+          <select [(ngModel)]="caseData.currentStage"
+                  class="w-full bg-dark-700 border border-dark-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all cursor-pointer">
+            <option value="FIRST_INSTANCE">المحكمة الابتدائية</option>
+            <option value="APPEAL">الاستئناف</option>
+            <option value="SUPREME">النقض</option>
+          </select>
         </div>
       </div>
     </div>
 
-    <!-- Footer Actions -->
-    <div class="px-8 py-6 bg-dark-900/50 border-t border-dark-700 flex items-center justify-end gap-3">
-      <button (click)="close()" class="px-6 py-2.5 rounded-xl border border-dark-600 text-gray-400 hover:bg-dark-700 transition-all font-bold">
-        إلغاء
-      </button>
-      <button (click)="save()" [disabled]="isLoading || !caseData.title"
-              class="px-8 py-2.5 rounded-xl bg-primary-500 text-white font-bold hover:bg-primary-600 shadow-lg shadow-primary-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+    <!-- Actions -->
+    <div class="p-6 border-t border-dark-700 bg-dark-900/50 flex gap-4">
+      <button [disabled]="isLoading" (click)="save()"
+              class="flex-1 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-primary-900/20 flex items-center justify-center gap-2">
         <i *ngIf="isLoading" class="pi pi-spin pi-spinner"></i>
-        {{ isLoading ? 'جاري الحفظ...' : 'حفظ القضية' }}
+        <span>{{ isLoading ? 'جاري الحفظ...' : 'حفظ القضية' }}</span>
+      </button>
+      <button (click)="close()" class="px-6 py-3 border border-dark-600 text-gray-300 hover:bg-dark-700 rounded-xl transition-colors">
+        إلغاء
       </button>
     </div>
   </div>
