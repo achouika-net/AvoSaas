@@ -40,6 +40,8 @@ export class ClientDetailComponent implements OnInit {
 
   isCaseModalOpen = false;
   isInvoiceModalOpen = false;
+  editingCase: Case | null = null;
+  editingInvoice: Invoice | null = null;
 
   // Document upload
   selectedCaseIdForDoc: string = '';
@@ -82,7 +84,6 @@ export class ClientDetailComponent implements OnInit {
         this.client = data;
         this.cases = (data as any).cases || [];
         this.invoices = (data as any).invoices || [];
-        // Load documents for all cases
         this.loadAllDocuments();
       },
       error: (err) => {
@@ -109,20 +110,62 @@ export class ClientDetailComponent implements OnInit {
   }
 
   // ─── Modal Controls ────────────────────────────
-  openCaseModal() { this.isCaseModalOpen = true; }
-  closeCaseModal() { this.isCaseModalOpen = false; }
+  openCaseModal(caseToEdit: Case | null = null) { 
+    this.editingCase = caseToEdit;
+    this.isCaseModalOpen = true; 
+  }
+  closeCaseModal() { 
+    this.isCaseModalOpen = false; 
+    this.editingCase = null;
+  }
   
-  openInvoiceModal() { this.isInvoiceModalOpen = true; }
-  closeInvoiceModal() { this.isInvoiceModalOpen = false; }
+  openInvoiceModal(invoiceToEdit: Invoice | null = null) { 
+    this.editingInvoice = invoiceToEdit;
+    this.isInvoiceModalOpen = true; 
+  }
+  closeInvoiceModal() { 
+    this.isInvoiceModalOpen = false; 
+    this.editingInvoice = null;
+  }
 
-  onCaseSaved(newCase: Case) {
-    this.cases = [newCase, ...this.cases];
+  onCaseSaved(savedCase: Case) {
+    const index = this.cases.findIndex(c => c.id === savedCase.id);
+    if (index > -1) {
+      this.cases[index] = savedCase;
+    } else {
+      this.cases = [savedCase, ...this.cases];
+    }
     this.cdr.detectChanges();
   }
 
-  onInvoiceSaved(newInvoice: Invoice) {
-    this.invoices = [newInvoice, ...this.invoices];
+  onInvoiceSaved(savedInvoice: Invoice) {
+    const index = this.invoices.findIndex(i => i.id === savedInvoice.id);
+    if (index > -1) {
+      this.invoices[index] = savedInvoice;
+    } else {
+      this.invoices = [savedInvoice, ...this.invoices];
+    }
     this.cdr.detectChanges();
+  }
+
+  deleteCase(id: string) {
+    if (!confirm('هل أنت متأكد من حذف هذه القضية؟ سيتم حذف جميع المواعيد والوثائق المرتبطة بها.')) return;
+    this.caseService.deleteCase(id).subscribe({
+      next: () => {
+        this.cases = this.cases.filter(c => c.id !== id);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  deleteInvoice(id: string) {
+    if (!confirm('هل أنت متأكد من حذف هذه الفاتورة/الدفعة؟')) return;
+    this.invoiceService.deleteInvoice(id).subscribe({
+      next: () => {
+        this.invoices = this.invoices.filter(i => i.id !== id);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   // ─── Document Upload ───────────────────────────
@@ -163,45 +206,29 @@ export class ClientDetailComponent implements OnInit {
     });
   }
 
-  openFilePicker() {
-    // Switch to documents tab and let user use the inline form
-    this.activeTab = 'DOCUMENTS';
-  }
-
-  // ─── Invoice Status Update ─────────────────────
-  updateInvoiceStatus(invoiceId: string, newStatus: string) {
-    this.invoiceService.updateStatus(invoiceId, newStatus).subscribe({
-      next: (updated) => {
-        this.invoices = this.invoices.map(inv => inv.id === invoiceId ? updated : inv);
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error('Error updating invoice status:', err)
-    });
-  }
-
   // ─── Financial Calculations ────────────────────
-  get totalBilled(): number {
-    return this.invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+  get totalAgreedFees(): number {
+    return this.cases.reduce((sum, c) => sum + (c.agreedFees || 0), 0);
   }
 
-  get totalPaid(): number {
+  get totalPaidFees(): number {
     return this.invoices
-      .filter(inv => inv.status === 'PAID')
+      .filter(inv => inv.status === 'PAID' && (inv.type === 'FEES' || inv.type === 'PREPAYMENT'))
       .reduce((sum, inv) => sum + (inv.amount || 0), 0);
   }
 
-  get totalUnpaid(): number {
+  get totalExpenses(): number {
     return this.invoices
-      .filter(inv => inv.status === 'UNPAID' || inv.status === 'PARTIAL')
+      .filter(inv => inv.type === 'EXPENSE')
       .reduce((sum, inv) => sum + (inv.amount || 0), 0);
+  }
+
+  get remainingBalance(): number {
+    return this.totalAgreedFees - this.totalPaidFees;
   }
 
   get ongoingCasesCount(): number {
     return this.cases.filter(c => c.status === 'ONGOING').length;
-  }
-
-  get closedCasesCount(): number {
-    return this.cases.filter(c => c.status !== 'ONGOING').length;
   }
 
   // ─── Helpers ───────────────────────────────────
@@ -209,32 +236,20 @@ export class ClientDetailComponent implements OnInit {
     this.activeTab = tab;
   }
 
-  getTypeLabel(type: string | undefined): string {
-    if (!type) return '';
-    switch (type) {
-      case 'INDIVIDUAL': return 'فرد';
-      case 'COMPANY': return 'شركة';
-      case 'PROFESSIONAL': return 'مهني';
-      default: return type;
-    }
-  }
-
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'PAID': return 'مدفوعة';
-      case 'UNPAID': return 'غير مدفوعة';
-      case 'PARTIAL': return 'جزئية';
-      default: return status;
-    }
-  }
-
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'PAID': return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'UNPAID': return 'bg-red-500/10 text-red-400 border-red-500/20';
-      case 'PARTIAL': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-      default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
-    }
+  translateCourtName(name?: string): string {
+    if (!name) return '---';
+    const mapping: { [key: string]: string } = {
+      'Casablanca First Instance Court': 'المحكمة الابتدائية بالدار البيضاء',
+      'Rabat First Instance Court': 'المحكمة الابتدائية بالرباط',
+      'Marrakech First Instance Court': 'المحكمة الابتدائية بمراكش',
+      'Fes First Instance Court': 'المحكمة الابتدائية بفاس',
+      'Tangier First Instance Court': 'المحكمة الابتدائية بطنجة',
+      'Casablanca Commercial Court': 'المحكمة التجارية بالدار البيضاء',
+      'Rabat Commercial Court': 'المحكمة التجارية بالرباط',
+      'Casablanca Appeal Court': 'محكمة الاستئناف بالدار البيضاء',
+      'Rabat Appeal Court': 'محكمة الاستئناف بالرباط'
+    };
+    return mapping[name] || name;
   }
 
   getCaseTypeLabel(type: string): string {
@@ -251,16 +266,58 @@ export class ClientDetailComponent implements OnInit {
 
   getCaseStageLabel(stage?: string): string {
     switch (stage) {
-      case 'FIRST_INSTANCE': return 'المحكمة الابتدائية';
+      case 'FIRST_INSTANCE':
+      case 'PRIMARY': return 'ابتدائي';
       case 'APPEAL': return 'الاستئناف';
       case 'SUPREME': return 'النقض';
       default: return stage || 'غير معروف';
     }
   }
 
+  getInvoiceTypeLabel(type?: string): string {
+    switch (type) {
+      case 'FEES': return 'أتعاب';
+      case 'PREPAYMENT': return 'تسبيق';
+      case 'EXPENSE': return 'مصاريف';
+      default: return type || 'أتعاب';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'PAID': return 'خالص';
+      case 'UNPAID': return 'غير مؤدى عنه';
+      case 'PARTIAL': return 'أداء جزئي';
+      case 'BALANCE': return 'الباقي';
+      default: return status;
+    }
+  }
+
+  getClientTypeLabel(type?: string): string {
+    switch (type) {
+      case 'INDIVIDUAL': return 'شخص ذاتي';
+      case 'COMPANY': return 'شركة / شخص معنوي';
+      case 'PROFESSIONAL': return 'مهني';
+      default: return type || 'غير محدد';
+    }
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'PAID': return 'bg-green-500/10 text-green-400 border-green-500/20';
+      case 'UNPAID': return 'bg-red-500/10 text-red-400 border-red-500/20';
+      case 'PARTIAL': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+    }
+  }
+
+  openFilePicker() {
+    this.activeTab = 'DOCUMENTS';
+    this.cdr.detectChanges();
+  }
+
   generateNiyaba(caseData: Case) {
     this.generatedNiyaba = this.caseService.getNiyabaTemplate(caseData, 'الأستاذ أحمد');
-    this.activeTab = 'SUMMARY'; // Show it in summary or just stay here
     this.cdr.detectChanges();
   }
 

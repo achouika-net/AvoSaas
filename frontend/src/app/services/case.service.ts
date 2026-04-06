@@ -8,17 +8,24 @@ export interface Case {
   type: string;
   courtName: string;
   opponentName?: string;
-  primaryNumber?: string;
-  appealNumber?: string;
-  supremeCourtNumber?: string;
   opponentLawyerName?: string;
   opponentLawyerOffice?: string;
   agreedFees?: number;
+  narrative?: string;
+  legalMemo?: string;
+  primaryNumber?: string;
+  appealNumber?: string;
+  supremeCourtNumber?: string;
   status?: string;
   currentStage?: string;
   clientId: string;
   centerId: string;
   createdAt?: string | Date;
+  _count?: {
+    appointments: number;
+    documents: number;
+    invoices: number;
+  };
 }
 
 @Injectable({

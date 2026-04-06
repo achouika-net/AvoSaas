@@ -19,6 +19,7 @@ export class ClientListComponent implements OnInit {
   selectedType: string = 'ALL';
   isLoading: boolean = false;
   isModalOpen: boolean = false;
+  editingClient: Client | null = null;
 
   constructor(
     private clientService: ClientService,
@@ -26,17 +27,12 @@ export class ClientListComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    console.log('ClientListComponent: Initializing...');
-    
-    // 1. Subscribe to the stream (BehaviorSubject)
     this.clientService.clients$.subscribe(data => {
-      console.log('ClientListComponent: Received data from stream', data.length);
       this.clients = data;
       this.filterClients();
-      this.cdr.detectChanges(); // Force UI refresh
+      this.cdr.detectChanges();
     });
 
-    // 2. Trigger initial load or background refresh
     if (this.clients.length === 0) {
       this.loadClients();
     } else {
@@ -52,12 +48,8 @@ export class ClientListComponent implements OnInit {
         this.cdr.detectChanges();
       })
     ).subscribe({
-      next: (data) => {
-        // Data is handled by the subscription in ngOnInit
-      },
-      error: (err) => {
-        console.error('Error loading clients:', err);
-      }
+      next: () => {},
+      error: (err) => console.error('Error loading clients:', err)
     });
   }
 
@@ -84,17 +76,29 @@ export class ClientListComponent implements OnInit {
     return status === 'ACTIVE' ? 'نشط' : 'مغلق';
   }
 
-  openModal() {
+  openModal(client: Client | null = null) {
+    this.editingClient = client;
     this.isModalOpen = true;
   }
 
   closeModal() {
     this.isModalOpen = false;
+    this.editingClient = null;
   }
 
-  onClientSaved(newClient: Client) {
-    // BehaviorSubject in service already handles adding the client
-    // but we ensure filter runs
+  onClientSaved(client: Client) {
     this.filterClients();
+    this.cdr.detectChanges();
+  }
+
+  deleteClient(id: string) {
+    if (!confirm('هل أنت متأكد من حذف هذا العميل؟ سيتم حذف جميع الملفات والبيانات المرتبطة به.')) return;
+    this.clientService.deleteClient(id).subscribe({
+      next: () => {
+        // Service handles BehaviourSubject update
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error deleting client:', err)
+    });
   }
 }

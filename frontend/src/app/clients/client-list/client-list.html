@@ -1,120 +1,109 @@
-<div class="space-y-6">
-  <!-- Header & Actions -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold text-white tracking-tight">إدارة العملاء</h1>
-      <p class="text-gray-400 text-sm mt-1">عرض وإدارة كافة العملاء المسجلين في المركز الحالي.</p>
-    </div>
-    
-    <button (click)="openModal()" title="إضافة عميل جديد" aria-label="إضافة عميل جديد"
-      class="bg-primary-500 hover:bg-primary-600 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-primary-500/20 active:scale-95">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-      عميل جديد
-    </button>
-  </div>
-
-  <!-- Filters & Search -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="md:col-span-2 relative">
-      <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+<div class="p-8 bg-dark-950 min-h-screen">
+  <!-- Header Section with Stats -->
+  <div class="max-w-7xl mx-auto mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 RTL">
+      <div>
+        <h1 class="text-3xl font-black text-white mb-2 tracking-tight">إدارة العملاء</h1>
+        <p class="text-gray-400 text-sm">لديك <span class="text-primary-500 font-bold">{{ clients.length }}</span> عميل مسجل حالياً</p>
       </div>
-      <input type="text" [(ngModel)]="searchTerm" (input)="filterClients()"
-        class="w-full bg-dark-800 border border-dark-700 text-white text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 pr-10 placeholder-gray-500 transition-all outline-none" 
-        placeholder="ابحث باسم العميل، رقم الهاتف، أو رقم الهوية...">
-    </div>
-    
-    <select [(ngModel)]="selectedType" (change)="filterClients()" title="تصفية حسب النوع" aria-label="تصفية حسب نوع العميل"
-      class="bg-dark-800 border border-dark-700 text-white text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block w-full p-3 outline-none transition-all cursor-pointer">
-      <option value="ALL">جميع أنواع العملاء</option>
-      <option value="INDIVIDUAL">فرد</option>
-      <option value="COMPANY">شركة</option>
-      <option value="PROFESSIONAL">مهني</option>
-    </select>
-  </div>
-
-  <!-- Clients Table -->
-  <div class="bg-dark-800/50 backdrop-blur-xl border border-dark-700 rounded-2xl overflow-hidden shadow-2xl relative min-h-[400px]">
-    <!-- Loading Overlay -->
-    <div *ngIf="isLoading" class="absolute inset-0 z-10 bg-dark-900/40 backdrop-blur-sm flex items-center justify-center">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500"></div>
+      <button (click)="openModal()" class="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-primary-500/20 transition-all active:scale-95 flex items-center gap-2 RTL">
+        <i class="pi pi-user-plus"></i>
+        إضافة عميل جديد
+      </button>
     </div>
 
-    <table class="w-full text-right">
-      <thead class="bg-dark-700/50 text-gray-400 text-xs uppercase font-medium">
-        <tr>
-          <th class="px-6 py-4">الاسم والبيانات</th>
-          <th class="px-6 py-4">النوع</th>
-          <th class="px-6 py-4">رقم الهوية / السجل</th>
-          <th class="px-6 py-4">دليل التواصل</th>
-          <th class="px-6 py-4">القضايا</th>
-          <th class="px-6 py-4">الحالة</th>
-          <th class="px-6 py-4"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-dark-700/50">
-        <tr *ngFor="let client of filteredClients" 
-            [routerLink]="['/clients', client.id]"
-            class="hover:bg-primary-500/5 transition-colors group cursor-pointer">
-          <td class="px-6 py-4">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-lg bg-dark-700 flex items-center justify-center text-primary-400 font-bold text-sm">
-                {{ client.name.charAt(0) }}
-              </div>
-              <div>
-                <div class="text-sm font-semibold text-white group-hover:text-primary-400 transition-colors">{{ client.name }}</div>
-                <div class="text-[11px] text-gray-500">منذ {{ client.createdAt | date:'shortDate' }}</div>
-              </div>
-            </div>
-          </td>
-          <td class="px-6 py-4">
-            <span class="text-xs px-2 py-1 rounded-md bg-dark-700 text-gray-300 border border-dark-600">
-              {{ getTypeLabel(client.type) }}
-            </span>
-          </td>
-          <td class="px-6 py-4 font-mono text-xs text-gray-400">
-            {{ client.identityNumber || '---' }}
-          </td>
-          <td class="px-6 py-4">
-            <div class="text-xs text-white">{{ client.phone }}</div>
-            <div class="text-[10px] text-gray-500">{{ client.email }}</div>
-          </td>
-          <td class="px-6 py-4 text-center">
-            <div class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary-500/10 text-primary-400 text-xs font-bold border border-primary-500/20">
-              {{ client._count?.cases || 0 }}
-            </div>
-          </td>
-          <td class="px-6 py-4">
-            <span [class]="client.status === 'ACTIVE' ? 'text-green-400 bg-green-400/10' : 'text-gray-400 bg-gray-400/10'" 
-                  class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-current">
-              {{ getStatusLabel(client.status) }}
-            </span>
-          </td>
-          <td class="px-6 py-4 text-left">
-            <button class="text-gray-500 hover:text-white transition-colors" title="خيارات إضافية" aria-label="خيارات إضافية">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
-            </button>
-          </td>
-        </tr>
-
-        <!-- Empty State -->
-        <tr *ngIf="filteredClients.length === 0 && !isLoading">
-          <td colspan="7" class="px-6 py-20 text-center">
-            <div class="flex flex-col items-center opacity-40">
-              <svg class="w-16 h-16 mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-              <p class="text-lg">لا يوجد عملاء مطابقين للبحث</p>
-              <p class="text-sm">جرب استخدام كلمات بحث بديلة أو أضف عميلاً جديداً</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Filters & Search -->
+    <div class="bg-dark-900/50 border border-dark-700 p-4 rounded-[2rem] backdrop-blur-md flex flex-col md:flex-row gap-4 items-center">
+      <div class="relative flex-1 w-full group">
+        <i class="pi pi-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors"></i>
+        <input [(ngModel)]="searchTerm" 
+               (input)="filterClients()"
+               placeholder="ابحث بالاسم، الهاتف أو رقم البطاقة..." 
+               class="w-full bg-dark-800 border border-dark-700 text-white rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary-500 outline-none transition-all RTL">
+      </div>
+      <div class="flex items-center gap-2 w-full md:w-auto RTL">
+        <select [(ngModel)]="selectedType" title="تصفية حسب نوع العميل"
+                (change)="filterClients()"
+                class="bg-dark-800 border border-dark-700 text-white rounded-xl py-3 px-6 focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer">
+          <option value="ALL">الكل</option>
+          <option value="INDIVIDUAL">أفراد</option>
+          <option value="COMPANY">شركات</option>
+          <option value="PROFESSIONAL">مهنيين</option>
+        </select>
+        <div class="text-xs text-gray-500 font-bold uppercase tracking-widest px-2">تصفية حسب النوع</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Add Client Modal -->
-  <app-client-modal 
-    [isOpen]="isModalOpen" 
-    (closeModal)="closeModal()" 
-    (clientSaved)="onClientSaved($event)">
+  <!-- Clients Grid / Table -->
+  <div class="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div class="bg-dark-900/40 border border-dark-700 rounded-[2.5rem] overflow-hidden shadow-2xl backdrop-blur-sm">
+      <table class="w-full text-right RTL">
+        <thead>
+          <tr class="bg-dark-800/80">
+            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest border-l border-dark-700">الاسم والنوع</th>
+            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest border-l border-dark-700">الهوية / الهاتف</th>
+            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest border-l border-dark-700 text-center">الملفات</th>
+            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest border-l border-dark-700">الحالة</th>
+            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-dark-700/50">
+          <tr *ngFor="let client of filteredClients" class="group hover:bg-white/[0.02] transition-colors">
+            <td class="px-8 py-6 border-l border-dark-700/50">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <i class="pi" [ngClass]="client.type === 'COMPANY' ? 'pi-building' : 'pi-user'" class="text-xl text-primary-500"></i>
+                </div>
+                <div>
+                  <a [routerLink]="['/clients', client.id]" class="text-white font-bold text-lg hover:text-primary-500 transition-colors block">{{ client.name }}</a>
+                  <span class="text-[10px] font-black bg-primary-500/10 text-primary-400 px-2 py-0.5 rounded-md uppercase">{{ getTypeLabel(client.type) }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="px-8 py-6 border-l border-dark-700/50">
+              <div class="space-y-1">
+                <p class="text-white font-mono text-sm">{{ client.phone || '---' }}</p>
+                <p class="text-gray-500 text-xs">{{ client.identityNumber || 'بدون هوية' }}</p>
+              </div>
+            </td>
+            <td class="px-8 py-6 border-l border-dark-700/50 text-center">
+              <span class="inline-flex w-10 h-10 items-center justify-center bg-dark-800 rounded-full text-white font-bold text-sm">
+                {{ client._count?.cases || 0 }}
+              </span>
+            </td>
+            <td class="px-8 py-6 border-l border-dark-700/50">
+              <span [class]="client.status === 'ACTIVE' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-gray-500/10 text-gray-500 border-gray-500/20'" 
+                    class="px-4 py-1 rounded-full text-[10px] font-black border">
+                {{ getStatusLabel(client.status) }}
+              </span>
+            </td>
+            <td class="px-8 py-6">
+              <div class="flex items-center gap-2">
+                <a [routerLink]="['/clients', client.id]" class="p-2.5 rounded-xl bg-primary-500/10 text-primary-500 hover:bg-primary-500 hover:text-white transition-all shadow-lg" title="عرض الملف">
+                  <i class="pi pi-eye"></i>
+                </a>
+                <button (click)="openModal(client)" class="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all shadow-lg" title="تعديل">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button (click)="deleteClient(client.id!)" class="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg" title="حذف">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="filteredClients.length === 0" class="p-20 text-center">
+        <i class="pi pi-users text-6xl text-dark-700 mb-4 block"></i>
+        <p class="text-gray-500 font-bold">لم يتم العثور على أي عملاء تطابق البحث</p>
+      </div>
+    </div>
+  </div>
+
+  <app-client-modal *ngIf="isModalOpen" 
+                   [editData]="editingClient"
+                   (saved)="onClientSaved($event)" 
+                   (closed)="closeModal()">
   </app-client-modal>
 </div>

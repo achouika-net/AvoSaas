@@ -18,15 +18,44 @@ export const getInvoices = async (req: Request, res: Response) => {
 
 export const createInvoice = async (req: Request, res: Response) => {
   try {
-    const { amount, status, clientId } = req.body;
+    const { amount, status, type, description, clientId, caseId } = req.body;
     const invoice = await prisma.invoice.create({
       data: {
         amount: parseFloat(amount),
         status: status || 'UNPAID',
-        clientId
+        type: type || 'FEES',
+        description,
+        clientId,
+        caseId
       }
     });
     res.status(201).json(invoice);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateInvoice = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    if (data.amount) data.amount = parseFloat(data.amount);
+    
+    const invoice = await prisma.invoice.update({
+      where: { id: String(id) },
+      data
+    });
+    res.json(invoice);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteInvoice = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.invoice.delete({ where: { id: String(id) } });
+    res.json({ message: 'Invoice deleted successfully' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

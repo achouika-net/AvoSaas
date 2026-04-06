@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Output, Input } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientService, Client } from '../../services/client.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-client-modal',
@@ -9,15 +10,21 @@ import { ClientService, Client } from '../../services/client.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './client-modal.html',
 })
-export class ClientModalComponent {
-  @Input() isOpen = false;
-  @Output() closeModal = new EventEmitter<void>();
-  @Output() clientSaved = new EventEmitter<Client>();
+export class ClientModalComponent implements OnInit {
+  @Input() editData: Client | null = null;
+  @Output() closed = new EventEmitter<void>();
+  @Output() saved = new EventEmitter<Client>();
   
   isSaving = false;
   client: Client = this.resetClient();
 
   constructor(private clientService: ClientService) {}
+
+  ngOnInit() {
+    if (this.editData) {
+      this.client = { ...this.editData };
+    }
+  }
 
   resetClient(): Client {
     return {
@@ -28,7 +35,7 @@ export class ClientModalComponent {
       email: '',
       address: '',
       status: 'ACTIVE',
-      centerId: 'center-1' // Default for now, should come from active center
+      centerId: 'center-1'
     };
   }
 
@@ -36,22 +43,22 @@ export class ClientModalComponent {
     if (!this.client.name || this.isSaving) return;
 
     this.isSaving = true;
-    this.clientService.createClient(this.client).subscribe({
-      next: (newClient) => {
-        this.clientSaved.emit(newClient);
+    const request = this.client.id 
+      ? this.clientService.updateClient(this.client.id, this.client)
+      : this.clientService.createClient(this.client);
+
+    request.pipe(
+      finalize(() => this.isSaving = false)
+    ).subscribe({
+      next: (res) => {
+        this.saved.emit(res);
         this.close();
       },
-      error: (err) => {
-        console.error('Error creating client:', err);
-      },
-      complete: () => {
-        this.isSaving = false;
-      }
+      error: (err) => console.error('Error saving client:', err)
     });
   }
 
   close() {
-    this.client = this.resetClient();
-    this.closeModal.emit();
+    this.closed.emit();
   }
 }

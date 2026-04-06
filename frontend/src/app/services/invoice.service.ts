@@ -6,7 +6,10 @@ export interface Invoice {
   id?: string;
   amount: number;
   status: 'PAID' | 'UNPAID' | 'PARTIAL';
+  type: 'FEES' | 'EXPENSE' | 'PREPAYMENT';
+  description?: string;
   clientId: string;
+  caseId?: string;
   createdAt?: string | Date;
 }
 
@@ -27,6 +30,14 @@ export class InvoiceService {
 
   createInvoice(invoice: Invoice): Observable<Invoice> {
     return this.http.post<Invoice>(this.apiUrl, invoice);
+  }
+
+  updateInvoice(id: string, invoice: Partial<Invoice>): Observable<Invoice> {
+    return this.http.put<Invoice>(`${this.apiUrl}/${id}`, invoice);
+  }
+
+  deleteInvoice(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
   updateStatus(id: string, status: string): Observable<Invoice> {

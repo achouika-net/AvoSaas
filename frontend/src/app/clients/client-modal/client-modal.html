@@ -1,76 +1,99 @@
-<div *ngIf="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <!-- Backdrop -->
-  <div class="absolute inset-0 bg-dark-900/60 backdrop-blur-sm" (click)="close()"></div>
-
-  <!-- Modal Content -->
-  <div class="relative bg-dark-800 border border-dark-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
-    <div class="p-6 border-b border-dark-700 flex justify-between items-center bg-dark-800/50">
-      <h3 class="text-xl font-bold text-white tracking-tight">إضافة عميل جديد</h3>
-      <button (click)="close()" title="إغلاق" aria-label="إغلاق النافذة"
-        class="text-gray-500 hover:text-white transition-colors">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+<div class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+  <div class="bg-dark-800 border border-dark-700 rounded-[2.5rem] w-full max-w-xl shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col">
+    <!-- Header -->
+    <div class="p-8 border-b border-white/5 flex justify-between items-center bg-dark-900/50">
+      <div class="flex items-center gap-4 RTL">
+        <div class="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center">
+          <i class="pi pi-user-plus text-xl text-primary-500"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-white tracking-tight">{{ editData ? 'تعديل بيانات العميل' : 'إضافة عميل جديد' }}</h3>
+          <p class="text-xs text-gray-500">يرجى ملء كافة المعلومات المطلوبة بدقة</p>
+        </div>
+      </div>
+      <button (click)="close()" title="إغلاق" class="text-gray-500 hover:text-white transition-colors">
+        <i class="pi pi-times"></i>
       </button>
     </div>
 
-    <form (ngSubmit)="save()" class="p-6 space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="md:col-span-2">
-          <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">الاسم الكامل</label>
-          <input type="text" [(ngModel)]="client.name" name="name" required
-            class="w-full bg-dark-700 border border-dark-600 text-white text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-all"
-            placeholder="أدخل اسم العميل...">
+    <!-- Body -->
+    <div class="p-10 space-y-8 overflow-y-auto max-h-[70vh] custom-scrollbar">
+      <div class="space-y-4">
+        <label class="block text-sm font-bold text-gray-400 RTL">اسم العميل بالكامل / الشركة <span class="text-red-500">*</span></label>
+        <div class="relative group">
+          <i class="pi pi-user absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 transition-colors group-focus-within:text-primary-500"></i>
+          <input [(ngModel)]="client.name" 
+                 placeholder="مثال: أحمد العلمي / شركة أفو تيك"
+                 class="w-full bg-dark-900 border border-white/5 text-lg font-bold text-white rounded-2xl py-4 pr-14 pl-4 focus:ring-2 focus:ring-primary-500 outline-none transition-all RTL">
         </div>
+      </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">نوع العميل</label>
-          <select [(ngModel)]="client.type" name="type" title="نوع العميل" aria-label="اختر نوع العميل"
-            class="w-full bg-dark-700 border border-dark-600 text-white text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-all cursor-pointer">
-            <option value="INDIVIDUAL">فرد</option>
-            <option value="COMPANY">شركة</option>
+      <div class="grid grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <label class="block text-sm font-bold text-gray-400 RTL">نوع العميل</label>
+          <select [(ngModel)]="client.type" title="نوع العميل"
+                  class="w-full bg-dark-900 border border-white/5 text-white rounded-2xl py-4 pr-4 pl-4 focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer RTL">
+            <option value="INDIVIDUAL">فرد (شخص ذاتي)</option>
+            <option value="COMPANY">شركة (شخص معنوي)</option>
             <option value="PROFESSIONAL">مهني</option>
           </select>
         </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">رقم الهوية / السجل</label>
-          <input type="text" [(ngModel)]="client.identityNumber" name="identityNumber"
-            class="w-full bg-dark-700 border border-dark-600 text-white text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-all"
-            placeholder="رقم CIN أو RC...">
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">رقم الهاتف</label>
-          <input type="tel" [(ngModel)]="client.phone" name="phone"
-            class="w-full bg-dark-700 border border-dark-600 text-white text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-all"
-            placeholder="06XXXXXXXX">
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">البريد الإلكتروني</label>
-          <input type="email" [(ngModel)]="client.email" name="email"
-            class="w-full bg-dark-700 border border-dark-600 text-white text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-all"
-            placeholder="example@mail.com">
-        </div>
-
-        <div class="md:col-span-2">
-          <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">العنوان</label>
-          <textarea [(ngModel)]="client.address" name="address" rows="2"
-            class="w-full bg-dark-700 border border-dark-600 text-white text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-all"
-            placeholder="العنوان الكامل للعميل..."></textarea>
+        <div class="space-y-4">
+          <label class="block text-sm font-bold text-gray-400 RTL">رقم الهوية / السجل</label>
+          <input [(ngModel)]="client.identityNumber" 
+                 placeholder="CIN / RC"
+                 class="w-full bg-dark-900 border border-white/5 text-white rounded-2xl py-4 pr-4 pl-4 focus:ring-2 focus:ring-primary-500 outline-none RTL">
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-3 pt-4 border-t border-dark-700">
-        <button type="button" (click)="close()" [disabled]="isSaving"
-          class="text-gray-400 hover:text-white font-medium text-sm transition-colors disabled:opacity-50">
-          إلغاء
-        </button>
-        <button type="submit" [disabled]="isSaving || !client.name"
-          class="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-600 text-white px-8 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-primary-500/20 active:scale-95 flex items-center gap-2">
-          <div *ngIf="isSaving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-          {{ isSaving ? 'جاري الحفظ...' : 'حفظ العميل' }}
-        </button>
+      <div class="grid grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <label class="block text-sm font-bold text-gray-400 RTL">رقم الهاتف</label>
+          <div class="relative group">
+            <i class="pi pi-phone absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 transition-colors group-focus-within:text-primary-500"></i>
+            <input [(ngModel)]="client.phone" 
+                   placeholder="+212 6..."
+                   class="w-full bg-dark-900 border border-white/5 text-white rounded-2xl py-4 pr-14 pl-4 focus:ring-2 focus:ring-primary-500 outline-none RTL">
+          </div>
+        </div>
+        <div class="space-y-4">
+          <label class="block text-sm font-bold text-gray-400 RTL">البريد الإلكتروني</label>
+          <input [(ngModel)]="client.email" 
+                 placeholder="example@email.com"
+                 class="w-full bg-dark-900 border border-white/5 text-white rounded-2xl py-4 pr-4 pl-4 focus:ring-2 focus:ring-primary-500 outline-none RTL">
+        </div>
       </div>
-    </form>
+
+      <div class="space-y-4">
+        <label class="block text-sm font-bold text-gray-400 RTL">العنوان بالكامل</label>
+        <textarea [(ngModel)]="client.address" 
+                  rows="3"
+                  placeholder="المدينة، الحي، رقم الباب..."
+                  class="w-full bg-dark-900 border border-white/5 text-white rounded-2xl p-4 focus:ring-2 focus:ring-primary-500 outline-none transition-all RTL"></textarea>
+      </div>
+
+      <div class="space-y-4">
+        <label class="block text-sm font-bold text-gray-400 RTL">حالة الملف</label>
+        <div class="flex gap-4 RTL">
+          <button (click)="client.status = 'ACTIVE'" 
+                  [class]="client.status === 'ACTIVE' ? 'bg-green-600 text-white border-green-500' : 'bg-dark-900 text-gray-500 border-white/5'"
+                  class="flex-1 py-3 rounded-xl border font-bold transition-all">نشط</button>
+          <button (click)="client.status = 'CLOSED'" 
+                  [class]="client.status === 'CLOSED' ? 'bg-dark-600 text-white border-white/20' : 'bg-dark-900 text-gray-500 border-white/5'"
+                  class="flex-1 py-3 rounded-xl border font-bold transition-all">مؤرشف / مغلق</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-8 border-t border-white/5 bg-dark-900/50 flex gap-4">
+      <button (click)="save()" 
+              [disabled]="isSaving || !client.name"
+              class="flex-1 py-4 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-2xl shadow-xl shadow-primary-500/20 transition-all flex items-center justify-center gap-2 group RTL active:scale-95 disabled:opacity-50">
+        <i class="pi" [ngClass]="isSaving ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i>
+        {{ editData ? 'تحديث البيانات' : 'تأكيد الإضافة' }}
+      </button>
+      <button (click)="close()" class="px-8 py-4 bg-dark-800 hover:bg-dark-700 text-gray-400 rounded-2xl font-bold transition-all border border-white/5 RTL">إلغاء</button>
+    </div>
   </div>
 </div>

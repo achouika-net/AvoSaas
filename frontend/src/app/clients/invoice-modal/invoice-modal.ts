@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InvoiceService, Invoice } from '../../services/invoice.service';
+import { CaseService, Case } from '../../services/case.service';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -10,26 +11,57 @@ import { finalize } from 'rxjs';
   imports: [CommonModule, FormsModule],
   templateUrl: './invoice-modal.html',
 })
-export class InvoiceModalComponent {
+export class InvoiceModalComponent implements OnInit {
   @Input() clientId!: string;
+  @Input() editData: Invoice | null = null;
   @Output() saved = new EventEmitter<Invoice>();
   @Output() closed = new EventEmitter<void>();
 
   invoiceData: Invoice = {
     amount: 0,
-    status: 'UNPAID',
-    clientId: ''
+    status: 'PAID',
+    type: 'FEES',
+    description: '',
+    clientId: '',
+    caseId: ''
   };
 
+  clientCases: Case[] = [];
   isLoading = false;
 
-  constructor(private invoiceService: InvoiceService) {}
+  constructor(
+    private invoiceService: InvoiceService,
+    private caseService: CaseService
+  ) {}
+
+  ngOnInit() {
+    if (this.editData) {
+      this.invoiceData = { ...this.editData };
+    }
+    this.loadClientCases();
+  }
+
+  loadClientCases() {
+    this.caseService.getCases(this.clientId).subscribe({
+      next: (cases) => this.clientCases = cases,
+      error: (err) => console.error('Error loading cases for invoice:', err)
+    });
+  }
 
   save() {
+    if (this.invoiceData.amount <= 0) {
+      alert('الرجاء إدخال مبلغ صالح.');
+      return;
+    }
+
     this.isLoading = true;
     this.invoiceData.clientId = this.clientId;
 
-    this.invoiceService.createInvoice(this.invoiceData).pipe(
+    const request = this.invoiceData.id
+      ? this.invoiceService.updateInvoice(this.invoiceData.id, this.invoiceData)
+      : this.invoiceService.createInvoice(this.invoiceData);
+
+    request.pipe(
       finalize(() => this.isLoading = false)
     ).subscribe({
       next: (res) => {
