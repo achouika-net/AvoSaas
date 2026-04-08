@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ClientService, Client } from '../../services/client.service';
 import { FormsModule } from '@angular/forms';
 import { AiAssistantPanelComponent } from '../../shared/ai-assistant-panel/ai-assistant-panel';
@@ -13,6 +14,9 @@ import { InvoiceModalComponent } from '../invoice-modal/invoice-modal';
 
 interface DocumentWithCase extends Document {
   caseName?: string;
+  fileUrl?: string;
+  mimeType?: string;
+  type?: 'TEXT' | 'ATTACHMENT';
 }
 
 @Component({
@@ -43,11 +47,26 @@ export class ClientDetailComponent implements OnInit {
   editingCase: Case | null = null;
   editingInvoice: Invoice | null = null;
 
-  // Document upload
-  selectedCaseIdForDoc: string = '';
-  docTitle: string = '';
   isUploadingDoc = false;
   generatedNiyaba: string | null = null;
+  
+  // Real file upload
+  docTitle: string = '';
+  selectedCaseIdForDoc: string = '';
+  selectedFile: File | null = null;
+  selectedFileBase64: string | null = null;
+  
+  // Camera & OCR
+  isCameraOpen = false;
+  isProcessingOcr = false;
+  editingDocId: string | null = null;
+  @ViewChild('videoElement') videoElement?: ElementRef<HTMLVideoElement>;
+  @ViewChild('canvasElement') canvasElement?: ElementRef<HTMLCanvasElement>;
+
+  // In-App Previewer State
+  isPreviewModalOpen = false;
+  safePreviewUrl: SafeResourceUrl | null = null;
+  currentlyViewingDocTitle: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -55,6 +74,7 @@ export class ClientDetailComponent implements OnInit {
     private caseService: CaseService,
     private invoiceService: InvoiceService,
     private documentService: DocumentService,
+    private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -169,19 +189,41 @@ export class ClientDetailComponent implements OnInit {
   }
 
   // ─── Document Upload ───────────────────────────
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      this.docTitle = file.name.split('.')[0];
+      
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.selectedFileBase64 = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   uploadDocument() {
-    if (!this.docTitle || !this.selectedCaseIdForDoc) return;
+    if (!this.selectedCaseIdForDoc) {
+      alert('الرجاء اختيار القضية أولاً');
+      return;
+    }
+
     this.isUploadingDoc = true;
-
-    const doc: Document = {
-      title: this.docTitle,
-      content: 'uploaded-file-ref-' + Date.now(),
-      caseId: this.selectedCaseIdForDoc
-    };
-
     const caseName = this.cases.find(c => c.id === this.selectedCaseIdForDoc)?.title || '';
 
-    this.documentService.createDocument(doc).pipe(
+    const payload: any = {
+      title: this.docTitle || (this.selectedFile ? this.selectedFile.name : 'مستند بدون عنوان'),
+      caseId: this.selectedCaseIdForDoc,
+      type: this.selectedFile ? 'ATTACHMENT' : 'TEXT',
+      mimeType: this.selectedFile ? this.selectedFile.type : 'text/plain',
+      fileUrl: this.selectedFileBase64 || null,
+      content: this.selectedFile ? '' : 'مذكرة يدوية'
+    };
+
+    console.log('[Upload] Payload:', { ...payload, fileUrl: payload.fileUrl ? '(base64...)' : 'null' });
+
+    this.documentService.createDocument(payload).pipe(
       finalize(() => {
         this.isUploadingDoc = false;
         this.cdr.detectChanges();
@@ -191,17 +233,247 @@ export class ClientDetailComponent implements OnInit {
         const newDoc: DocumentWithCase = {...res, caseName};
         this.documents = [newDoc, ...this.documents];
         this.docTitle = '';
+        this.selectedFile = null;
+        this.selectedFileBase64 = null;
         this.selectedCaseIdForDoc = '';
       },
-      error: (err) => console.error('Error uploading document:', err)
+      error: (err) => {
+        console.error('Error uploading document:', err);
+        alert('حدث خطأ أثناء الرفع');
+      }
     });
   }
 
   deleteDocument(docId: string) {
+    if (!confirm('هل أنت متأكد من حذف هذه الوثيقة؟')) return;
     this.documentService.deleteDocument(docId).subscribe({
       next: () => {
         this.documents = this.documents.filter(d => d.id !== docId);
         this.cdr.detectChanges();
+      }
+    });
+  }
+
+  editDocument(doc: DocumentWithCase) {
+    this.editingDocId = doc.id || null;
+  }
+
+  saveDocEdit(doc: DocumentWithCase) {
+    if (this.editingDocId === doc.id) {
+      this.editingDocId = null;
+      if (doc.id) {
+        this.documentService.updateDocument(doc.id, { title: doc.title }).subscribe();
+      }
+    }
+  }
+
+  viewDocument(doc: DocumentWithCase) {
+    if (doc.type === 'ATTACHMENT' && doc.fileUrl && doc.fileUrl.startsWith('data:')) {
+      try {
+        const base64Data = doc.fileUrl.split(',')[1];
+        const contentType = doc.fileUrl.split(',')[0].split(':')[1].split(';')[0];
+        
+        const blob = this.base64ToBlob(base64Data, contentType);
+        const blobUrl = URL.createObjectURL(blob);
+        
+        console.log('Generating In-App Secure Preview:', blobUrl);
+        
+        // SECURITY: Use Sanitizer to trust the app-internal Blob URL
+        this.safePreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
+        this.currentlyViewingDocTitle = doc.title;
+        this.isPreviewModalOpen = true;
+        
+      } catch (e) {
+        console.error('Document rendering error:', e);
+        this.generatedNiyaba = doc.content;
+      }
+    } else {
+      this.generatedNiyaba = doc.content;
+    }
+  }
+
+  closePreviewModal() {
+    this.isPreviewModalOpen = false;
+    // Clean up memory
+    if (this.safePreviewUrl) {
+      // Note: Actual revocation happens via URL.revokeObjectURL if we tracked it
+      this.safePreviewUrl = null;
+    }
+  }
+
+  private base64ToBlob(base64: string, contentType: string): Blob {
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
+
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+      const slice = byteCharacters.slice(offset, offset + 512);
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+
+    return new Blob(byteArrays, { type: contentType });
+  }
+
+  downloadDocument(doc: DocumentWithCase) {
+    if (doc.type === 'ATTACHMENT' && doc.fileUrl) {
+      if (doc.fileUrl.startsWith('data:')) {
+        const base64Data = doc.fileUrl.split(',')[1];
+        const contentType = doc.fileUrl.split(',')[0].split(':')[1].split(';')[0];
+        const blob = this.base64ToBlob(base64Data, contentType);
+        const blobUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = doc.title;
+        link.click();
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        const link = document.createElement('a');
+        link.href = doc.fileUrl;
+        link.download = doc.title;
+        link.click();
+      }
+    } else {
+      // Original Word generation for TEXT memos
+      const content = `
+        <html dir="rtl" charset="utf-8">
+          <head>
+            <meta charset="utf-8">
+            <title>${doc.title}</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2>${doc.title}</h2>
+            <div>${doc.content?.replace(/\n/g, '<br>') || ''}</div>
+          </body>
+        </html>
+      `;
+      const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${doc.title}.doc`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  // ─── Camera OCR Scanning ───────────────────────
+  openCameraScanner() {
+    this.isCameraOpen = true;
+    this.cdr.detectChanges();
+    this.initCamera();
+  }
+
+  closeCameraPlanner() {
+    this.isCameraOpen = false;
+    this.stopCamera();
+    this.cdr.detectChanges();
+  }
+
+  async initCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      if (this.videoElement) {
+        this.videoElement.nativeElement.srcObject = stream;
+      }
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      alert('لا يمكن الوصول إلى الكاميرا. يرجى التحقق من أذونات المتصفح.');
+    }
+  }
+
+  stopCamera() {
+    if (this.videoElement?.nativeElement?.srcObject) {
+      const stream = this.videoElement.nativeElement.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+    }
+  }
+
+  captureImage() {
+    if (!this.videoElement || !this.canvasElement) return;
+    
+    const video = this.videoElement.nativeElement;
+    const canvas = this.canvasElement.nativeElement;
+    const context = canvas.getContext('2d');
+    
+    if (context && video.videoWidth > 0 && video.videoHeight > 0) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+      
+      // We will handle the decision (Photo vs OCR) via UI buttons
+      this.selectedFileBase64 = imageBase64;
+      this.stopCamera();
+    }
+  }
+
+  saveCameraAsAttachment() {
+    if (!this.selectedFileBase64 || !this.selectedCaseIdForDoc) {
+      alert('الرجاء اختيار القضية أولاً');
+      return;
+    }
+
+    this.isProcessingOcr = true;
+    const caseName = this.cases.find(c => c.id === this.selectedCaseIdForDoc)?.title || '';
+
+    const payload: any = {
+      title: this.docTitle || 'صورة من الكاميرا',
+      caseId: this.selectedCaseIdForDoc,
+      type: 'ATTACHMENT',
+      mimeType: 'image/jpeg',
+      fileUrl: this.selectedFileBase64,
+      content: 'مرفق مصور'
+    };
+
+    console.log('[Camera Attachment] Payload:', { ...payload, fileUrl: '(base64...)' });
+
+    this.documentService.createDocument(payload).pipe(
+      finalize(() => {
+        this.isProcessingOcr = false;
+        this.selectedFileBase64 = null;
+        this.closeCameraPlanner();
+      })
+    ).subscribe({
+      next: (res) => {
+        const newDoc: DocumentWithCase = {...res, caseName};
+        this.documents = [newDoc, ...this.documents];
+        this.docTitle = '';
+        this.selectedCaseIdForDoc = '';
+      }
+    });
+  }
+
+  processOcr() {
+    if (!this.selectedFileBase64 || !this.selectedCaseIdForDoc) {
+       alert('الرجاء اختيار القضية أولاً');
+       return;
+    }
+
+    this.isProcessingOcr = true;
+    const caseName = this.cases.find(c => c.id === this.selectedCaseIdForDoc)?.title || '';
+    const centerId = this.client?.centerId || '';
+
+    this.documentService.scanOcr(this.selectedFileBase64, this.docTitle, this.selectedCaseIdForDoc, centerId).pipe(
+      finalize(() => {
+        this.isProcessingOcr = false;
+        this.selectedFileBase64 = null;
+        this.closeCameraPlanner();
+      })
+    ).subscribe({
+      next: (res) => {
+        const newDoc: DocumentWithCase = {...res, caseName};
+        this.documents = [newDoc, ...this.documents];
+        this.docTitle = '';
+        this.selectedCaseIdForDoc = '';
+      },
+      error: (err) => {
+        console.error('OCR error:', err);
+        alert('حدث خطأ أثناء إجراء المسح الضوئي عبر الذكاء الاصطناعي.');
       }
     });
   }

@@ -19,3 +19,10 @@ Thumbs.db
 
 # Docker volumes
 avosaas_data/
+
+# Logs
+backend/logs/
+*.log
+
+# Local Archives
+backend/office_archive/

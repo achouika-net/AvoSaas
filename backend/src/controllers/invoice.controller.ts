@@ -38,12 +38,14 @@ export const createInvoice = async (req: Request, res: Response) => {
 export const updateInvoice = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const data = req.body;
-    if (data.amount) data.amount = parseFloat(data.amount);
+    const { amount, status, type, description, clientId, caseId } = req.body;
     
     const invoice = await prisma.invoice.update({
       where: { id: String(id) },
-      data
+      data: {
+        amount: amount !== undefined ? parseFloat(amount) : undefined,
+        status, type, description, clientId, caseId
+      }
     });
     res.json(invoice);
   } catch (error: any) {

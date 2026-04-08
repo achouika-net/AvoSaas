@@ -6,24 +6,31 @@ export const suggestLegalContent = async (req: Request, res: Response) => {
   try {
     const { type, description, centerId } = req.body;
     
-    // 1. Search local Law database for matching articles
+    // 1. Fetch Laws matching the category
+    const lawsInCategory = await prisma.law.findMany({
+      where: type ? { category: type } : {}
+    });
+
     const searchTerms = (description || '').split(/\s+/).filter((s: string) => s.length > 3);
     
-    // Search shared Law database
-    const matchedLaws: Law[] = await prisma.law.findMany({
-      where: {
-        OR: [
-          { category: type },
-          ...searchTerms.map((term: string) => ({
-            content: { contains: term, mode: 'insensitive' as const }
-          })),
-          ...searchTerms.map((term: string) => ({
-            keywords: { contains: term, mode: 'insensitive' as const }
-          }))
-        ]
-      },
-      take: 3
+    // Rank laws by matching terms
+    let rankedLaws = lawsInCategory.map((law: Law) => {
+      let score = 0;
+      searchTerms.forEach((term: string) => {
+        if (law.keywords && law.keywords.includes(term)) score += 3; // High weight for keyword match
+        if (law.content.includes(term)) score += 1;
+        if (law.codeName.includes(term)) score += 1;
+      });
+      return { law, score };
     });
+
+    // Sort by score descending and take top 5
+    rankedLaws.sort((a, b) => b.score - a.score);
+    const matchedLaws: Law[] = rankedLaws.filter(r => r.score > 0).slice(0, 5).map(r => r.law);
+    // If no keyword matches, fallback to generic category laws
+    if (matchedLaws.length === 0) {
+      matchedLaws.push(...lawsInCategory.slice(0, 2));
+    }
 
     // 2. Search Private Office Library (Isolation by centerId)
     let matchedMemos: LibraryMemo[] = [];
@@ -40,17 +47,23 @@ export const suggestLegalContent = async (req: Request, res: Response) => {
       }
       
       matchedMemos = await prisma.libraryMemo.findMany({
-        where: {
-          centerId: String(centerId),
-          OR: [
-            { category: type },
-            ...searchTerms.map((term: string) => ({
-              content: { contains: term, mode: 'insensitive' as const }
-            }))
-          ]
-        },
-        take: 3
+        where: { centerId: String(centerId) }
       });
+      
+      // Rank private memos
+      let rankedMemos = matchedMemos.map((memo: LibraryMemo) => {
+        let score = 0;
+        if (memo.category === type) score += 2;
+        searchTerms.forEach((term: string) => {
+          if (memo.title.includes(term)) score += 3;
+          if (memo.category?.includes(term)) score += 2;
+          if (memo.content.includes(term)) score += 1;
+        });
+        return { memo, score };
+      });
+      
+      rankedMemos.sort((a, b) => b.score - a.score);
+      matchedMemos = rankedMemos.filter(r => r.score >= 1).slice(0, 3).map(r => r.memo);
     }
 
     let memo = '';
@@ -146,10 +159,17 @@ export const getSettings = async (req: Request, res: Response) => {
     const { centerId } = req.params as { centerId: string };
     const center = await prisma.center.findUnique({
       where: { id: centerId },
-      select: { geminiApiKey: true }
+      select: { geminiApiKey: true, logo: true, headerTextAr: true, headerTextFr: true, footerTextAr: true, footerTextFr: true }
     });
     
-    res.json({ apiKey: center?.geminiApiKey || '' });
+    res.json({ 
+      apiKey: center?.geminiApiKey || '', 
+      logo: center?.logo || '',
+      headerTextAr: center?.headerTextAr || '',
+      headerTextFr: center?.headerTextFr || '',
+      footerTextAr: center?.footerTextAr || '',
+      footerTextFr: center?.footerTextFr || ''
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -157,17 +177,35 @@ export const getSettings = async (req: Request, res: Response) => {
 
 export const updateSettings = async (req: Request, res: Response) => {
   try {
-    const { centerId, apiKey } = req.body;
+    const { centerId, apiKey, logo, headerTextAr, headerTextFr, footerTextAr, footerTextFr } = req.body;
     
     if (!centerId) return res.status(400).json({ error: 'Center ID required' });
     
-    await prisma.center.update({
+    await prisma.center.upsert({
       where: { id: centerId },
-      data: { geminiApiKey: apiKey }
+      update: { 
+        geminiApiKey: apiKey, 
+        logo: logo, 
+        headerTextAr: headerTextAr, 
+        headerTextFr: headerTextFr,
+        footerTextAr: footerTextAr,
+        footerTextFr: footerTextFr
+      },
+      create: { 
+        id: centerId, 
+        name: 'Default Office', 
+        geminiApiKey: apiKey, 
+        logo: logo, 
+        headerTextAr: headerTextAr, 
+        headerTextFr: headerTextFr,
+        footerTextAr: footerTextAr,
+        footerTextFr: footerTextFr
+      }
     });
     
     res.json({ success: true });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('updateSettings Detailed Error:', error);
+    res.status(500).json({ error: error.message || 'Prisma Update Error' });
   }
 };

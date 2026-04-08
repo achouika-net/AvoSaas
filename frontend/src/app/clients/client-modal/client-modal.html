@@ -7,7 +7,7 @@
           <i class="pi pi-user-plus text-xl text-primary-500"></i>
         </div>
         <div>
-          <h3 class="text-xl font-bold text-white tracking-tight">{{ editData ? 'تعديل بيانات العميل' : 'إضافة عميل جديد' }}</h3>
+          <h3 class="text-xl font-bold text-white tracking-tight">{{ editData ? 'تعديل بيانات الموكل' : 'إضافة موكل جديد' }}</h3>
           <p class="text-xs text-gray-500">يرجى ملء كافة المعلومات المطلوبة بدقة</p>
         </div>
       </div>
@@ -19,7 +19,7 @@
     <!-- Body -->
     <div class="p-10 space-y-8 overflow-y-auto max-h-[70vh] custom-scrollbar">
       <div class="space-y-4">
-        <label class="block text-sm font-bold text-gray-400 RTL">اسم العميل بالكامل / الشركة <span class="text-red-500">*</span></label>
+        <label class="block text-sm font-bold text-gray-400 RTL">اسم الموكل بالكامل / الشركة <span class="text-red-500">*</span></label>
         <div class="relative group">
           <i class="pi pi-user absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 transition-colors group-focus-within:text-primary-500"></i>
           <input [(ngModel)]="client.name" 
@@ -30,8 +30,8 @@
 
       <div class="grid grid-cols-2 gap-6">
         <div class="space-y-4">
-          <label class="block text-sm font-bold text-gray-400 RTL">نوع العميل</label>
-          <select [(ngModel)]="client.type" title="نوع العميل"
+          <label class="block text-sm font-bold text-gray-400 RTL">صفة الموكل</label>
+          <select [(ngModel)]="client.type" title="صفة الموكل"
                   class="w-full bg-dark-900 border border-white/5 text-white rounded-2xl py-4 pr-4 pl-4 focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer RTL">
             <option value="INDIVIDUAL">فرد (شخص ذاتي)</option>
             <option value="COMPANY">شركة (شخص معنوي)</option>

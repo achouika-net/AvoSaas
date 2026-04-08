@@ -8,15 +8,20 @@ datasource db {
 }
 
 model Center {
-  id        String       @id @default(uuid())
-  name      String
-  address   String?
+  id           String        @id @default(uuid())
+  name         String
+  address      String?
+  createdAt    DateTime      @default(now())
   geminiApiKey String?
-  createdAt DateTime     @default(now())
-  cases     Case[]
-  clients   Client[]
-  users     UserCenter[]
+  logo         String?
+  footerTextAr String?
+  footerTextFr String?
+  headerTextAr String?
+  headerTextFr String?
+  cases        Case[]
+  clients      Client[]
   libraryMemos LibraryMemo[]
+  users        UserCenter[]
 }
 
 model User {
@@ -56,31 +61,31 @@ model Client {
 }
 
 model Case {
-  id                 String        @id @default(uuid())
-  title              String
-  type               String
-  courtName          String
-  opponentName       String?
-  primaryNumber      String?
-  appealNumber       String?
-  supremeCourtNumber String?
-  opponentLawyerName  String?
+  id                   String        @id @default(uuid())
+  title                String
+  type                 String
+  courtName            String
+  opponentName         String?
+  primaryNumber        String?
+  appealNumber         String?
+  supremeCourtNumber   String?
+  status               String        @default("ONGOING")
+  currentStage         String        @default("FIRST_INSTANCE")
+  clientId             String
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  centerId             String
+  agreedFees           Float?        @default(0)
+  opponentLawyerName   String?
   opponentLawyerOffice String?
-  agreedFees          Float?        @default(0)
-  narrative           String?
-  legalMemo           String?
-  status             String        @default("ONGOING")
-  currentStage       String        @default("FIRST_INSTANCE")
-  clientId           String
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  centerId           String
-  appointments       Appointment[]
-  center             Center        @relation(fields: [centerId], references: [id])
-  client             Client        @relation(fields: [clientId], references: [id])
-  documents          Document[]
-  expenses           Expense[]
-  invoices           Invoice[]
+  legalMemo            String?
+  narrative            String?
+  appointments         Appointment[]
+  center               Center        @relation(fields: [centerId], references: [id])
+  client               Client        @relation(fields: [clientId], references: [id])
+  documents            Document[]
+  expenses             Expense[]
+  invoices             Invoice[]
 }
 
 model Appointment {
@@ -100,6 +105,9 @@ model Document {
   content   String
   caseId    String
   createdAt DateTime @default(now())
+  fileUrl   String?
+  mimeType  String?
+  type      String   @default("TEXT")
   case      Case     @relation(fields: [caseId], references: [id])
 }
 
@@ -114,50 +122,50 @@ model Expense {
 }
 
 model Invoice {
-  id        String   @id @default(uuid())
-  amount    Float
-  status    String   @default("UNPAID")
-  type      String   @default("FEES") // FEES, EXPENSE, PREPAYMENT
+  id          String   @id @default(uuid())
+  amount      Float
+  status      String   @default("UNPAID")
+  clientId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  caseId      String?
   description String?
-  clientId  String
-  caseId    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  client    Client   @relation(fields: [clientId], references: [id])
-  case      Case?    @relation(fields: [caseId], references: [id])
+  type        String   @default("FEES")
+  case        Case?    @relation(fields: [caseId], references: [id])
+  client      Client   @relation(fields: [clientId], references: [id])
 }
 
 model Law {
   id            String   @id @default(uuid())
-  codeName      String   // e.g., "مدونة الشغل", "قانون المسطرة المدنية"
-  articleNumber String   // e.g., "المادة 62"
-  content       String   // Full authentic Arabic text
-  category      String?  // CIVIL, LABOUR, CRIMINAL, etc.
-  keywords      String?  // SPACE separated keywords for search
+  codeName      String
+  articleNumber String
+  content       String
+  category      String?
+  keywords      String?
   createdAt     DateTime @default(now())
 }
 
 model LibraryMemo {
-  id            String   @id @default(uuid())
-  title         String
-  content       String
-  category      String   // e.g., "DIVORCE", "COMMERCIAL"
-  centerId      String
-  center        Center   @relation(fields: [centerId], references: [id])
-  filePath      String?  // Local file path relative to scanning folder
-  lastModified  DateTime? // To detect file changes
-  createdAt     DateTime @default(now())
+  id           String    @id @default(uuid())
+  title        String
+  content      String
+  category     String
+  centerId     String
+  createdAt    DateTime  @default(now())
+  filePath     String?
+  lastModified DateTime?
+  center       Center    @relation(fields: [centerId], references: [id])
 }
 
 model SyncJob {
-  id            String   @id @default(uuid())
-  centerId      String   @unique
-  isSyncing     Boolean  @default(false)
-  scanned       Int      @default(0)
-  total         Int      @default(0)
-  new           Int      @default(0)
-  updated       Int      @default(0)
-  errors        Int      @default(0)
-  lastSync      DateTime?
-  updatedAt     DateTime @updatedAt
+  id        String    @id @default(uuid())
+  centerId  String    @unique
+  isSyncing Boolean   @default(false)
+  scanned   Int       @default(0)
+  total     Int       @default(0)
+  new       Int       @default(0)
+  updated   Int       @default(0)
+  errors    Int       @default(0)
+  lastSync  DateTime?
+  updatedAt DateTime  @updatedAt
 }

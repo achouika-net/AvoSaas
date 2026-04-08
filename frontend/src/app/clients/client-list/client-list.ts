@@ -92,7 +92,7 @@ export class ClientListComponent implements OnInit {
   }
 
   deleteClient(id: string) {
-    if (!confirm('هل أنت متأكد من حذف هذا العميل؟ سيتم حذف جميع الملفات والبيانات المرتبطة به.')) return;
+    if (!confirm('هل أنت متأكد من حذف هذا الموكل؟ سيتم حذف جميع الملفات والبيانات المرتبطة به.')) return;
     this.clientService.deleteClient(id).subscribe({
       next: () => {
         // Service handles BehaviourSubject update

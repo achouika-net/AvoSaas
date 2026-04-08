@@ -79,11 +79,23 @@ export const createCase = async (req: Request, res: Response) => {
 export const updateCase = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const data = req.body;
+    const { 
+      title, type, courtName, opponentName, 
+      opponentLawyerName, opponentLawyerOffice, agreedFees,
+      primaryNumber, appealNumber, supremeCourtNumber, 
+      currentStage, narrative, legalMemo, status
+    } = req.body;
+
     const updatedCase = await prisma.case.update({
       where: { id: String(id) },
-      data
+      data: {
+        title, type, courtName, opponentName, opponentLawyerName, opponentLawyerOffice,
+        agreedFees: agreedFees !== undefined ? Number(agreedFees) : undefined,
+        primaryNumber, appealNumber, supremeCourtNumber,
+        currentStage, narrative, legalMemo, status
+      }
     });
+
     res.json(updatedCase);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

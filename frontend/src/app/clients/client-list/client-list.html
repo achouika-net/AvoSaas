@@ -3,12 +3,12 @@
   <div class="max-w-7xl mx-auto mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 RTL">
       <div>
-        <h1 class="text-3xl font-black text-white mb-2 tracking-tight">إدارة العملاء</h1>
-        <p class="text-gray-400 text-sm">لديك <span class="text-primary-500 font-bold">{{ clients.length }}</span> عميل مسجل حالياً</p>
+        <h1 class="text-3xl font-black text-white mb-2 tracking-tight">إدارة الموكلين</h1>
+        <p class="text-gray-400 text-sm">لديك <span class="text-primary-500 font-bold">{{ clients.length }}</span> موكل مسجل حالياً</p>
       </div>
       <button (click)="openModal()" class="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-primary-500/20 transition-all active:scale-95 flex items-center gap-2 RTL">
         <i class="pi pi-user-plus"></i>
-        إضافة عميل جديد
+        إضافة موكل جديد
       </button>
     </div>
 
@@ -22,7 +22,7 @@
                class="w-full bg-dark-800 border border-dark-700 text-white rounded-xl py-3 pr-12 pl-4 focus:ring-2 focus:ring-primary-500 outline-none transition-all RTL">
       </div>
       <div class="flex items-center gap-2 w-full md:w-auto RTL">
-        <select [(ngModel)]="selectedType" title="تصفية حسب نوع العميل"
+        <select [(ngModel)]="selectedType" title="تصفية حسب صفة الموكل"
                 (change)="filterClients()"
                 class="bg-dark-800 border border-dark-700 text-white rounded-xl py-3 px-6 focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer">
           <option value="ALL">الكل</option>
@@ -41,11 +41,11 @@
       <table class="w-full text-right RTL">
         <thead>
           <tr class="bg-dark-800/80">
-            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest border-l border-dark-700">الاسم والنوع</th>
-            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest border-l border-dark-700">الهوية / الهاتف</th>
-            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest border-l border-dark-700 text-center">الملفات</th>
-            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest border-l border-dark-700">الحالة</th>
-            <th class="px-8 py-5 text-gray-400 text-[10px] font-black uppercase tracking-widest">إجراءات</th>
+            <th class="px-8 py-5 text-gray-300 text-xs font-black uppercase tracking-widest border-l border-dark-700">الاسم والنوع</th>
+            <th class="px-8 py-5 text-gray-300 text-xs font-black uppercase tracking-widest border-l border-dark-700">الهوية / الهاتف</th>
+            <th class="px-8 py-5 text-gray-300 text-xs font-black uppercase tracking-widest border-l border-dark-700 text-center">الملفات</th>
+            <th class="px-8 py-5 text-gray-300 text-xs font-black uppercase tracking-widest border-l border-dark-700">الحالة</th>
+            <th class="px-8 py-5 text-gray-300 text-xs font-black uppercase tracking-widest">إجراءات</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-dark-700/50">
@@ -96,7 +96,7 @@
       </table>
       <div *ngIf="filteredClients.length === 0" class="p-20 text-center">
         <i class="pi pi-users text-6xl text-dark-700 mb-4 block"></i>
-        <p class="text-gray-500 font-bold">لم يتم العثور على أي عملاء تطابق البحث</p>
+        <p class="text-gray-500 font-bold">لم يتم العثور على أي موكلين تطابق البحث</p>
       </div>
     </div>
   </div>

@@ -151,13 +151,12 @@
           
           <!-- Voice Recorder Button -->
           <button (click)="recordNarrative()" 
-                  [disabled]="isRecording"
                   class="absolute left-6 bottom-6 w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-xl group"
                   [class.bg-red-500]="isRecording"
                   [class.animate-pulse]="isRecording"
                   [class.bg-primary-600]="!isRecording">
-            <i class="pi pi-microphone text-xl text-white group-hover:scale-110"></i>
-            <span *ngIf="isRecording" class="absolute -top-10 bg-red-500 text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap">جاري الاستماع...</span>
+            <i class="pi" [ngClass]="isRecording ? 'pi-stop-circle' : 'pi-microphone'" class="text-xl text-white group-hover:scale-110 transition-transform"></i>
+            <span *ngIf="isRecording" class="absolute -top-10 bg-red-500 text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap">جاري الاستماع (انقر للإيقاف)...</span>
           </button>
         </div>
 
@@ -189,22 +188,25 @@
           </button>
         </div>
 
-        <div class="flex-1 relative">
-          <textarea [(ngModel)]="caseData.legalMemo" 
-                    rows="15" title="المذكرة القانونية"
-                    class="w-full h-full min-h-[400px] bg-white text-dark-900 rounded-2xl p-8 focus:ring-4 focus:ring-primary-500/20 outline-none shadow-inner text-lg leading-relaxed font-serif RTL"
-                    placeholder="جاري تحضير 'التوليفة القانونية' والمذكرة..."></textarea>
+        <div class="flex-1 relative bg-gray-100 rounded-2xl p-4 md:p-8 overflow-y-auto">
+          <!-- A4 Paper Concept -->
+          <div contenteditable="true" 
+               (blur)="onMemoContentChange($event)"
+               [innerHTML]="safeMemoHtml"
+               title="المذكرة القانونية القابلة للتعديل"
+               class="max-w-[21cm] mx-auto min-h-[29.7cm] bg-white text-black shadow-lg rounded-sm p-[1cm] focus:outline-none focus:ring-4 focus:ring-primary-500/30 transition-shadow">
+          </div>
           
           <!-- Loading Overlay with specific Moroccan Law Database text -->
-          <div *ngIf="isLoading" class="absolute inset-0 bg-white/90 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center gap-6 animate-in fade-in duration-300 z-[70]">
+          <div *ngIf="isLoading" class="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-6 animate-in fade-in duration-300 z-[70]">
             <div class="relative w-20 h-20">
               <div class="absolute inset-0 border-4 border-primary-500/20 rounded-full"></div>
               <div class="absolute inset-0 border-4 border-primary-600 rounded-full border-t-transparent animate-spin"></div>
               <i class="pi pi-search absolute inset-0 flex items-center justify-center text-primary-600 text-2xl"></i>
             </div>
             <div class="text-center space-y-2">
-              <p class="text-dark-900 font-black text-xl RTL">جاري البحث في قاعدة النصوص القانونية المغربية...</p>
-              <p class="text-gray-500 text-sm RTL italic animate-pulse">يتم استخراج الفصول المناسبة من (ق.م.م، مدونة الشغل، المسطرة المدنية...)</p>
+              <p class="text-dark-900 font-black text-xl RTL drop-shadow-md">جاري البحث في قاعدة النصوص القانونية المغربية...</p>
+              <p class="text-dark-700 text-sm RTL italic animate-pulse font-bold bg-white/50 px-4 py-1 rounded-full">يتم استخراج الفصول المناسبة من (ق.م.م، التزامات والعقود...)</p>
             </div>
           </div>
         </div>
@@ -228,9 +230,22 @@
         <i *ngIf="!isLoading" class="pi pi-arrow-left text-sm mt-0.5"></i>
       </button>
 
+      <button *ngIf="currentStep === 3" (click)="saveToLibrary()" 
+              [disabled]="isSavingLibrary || !caseData.legalMemo"
+              class="px-6 py-3 border border-dark-600 text-primary-500 rounded-xl hover:bg-dark-800 transition-all font-bold flex items-center gap-2 RTL">
+        <i class="pi" [ngClass]="isSavingLibrary ? 'pi-spin pi-spinner' : 'pi-book'"></i>
+        أرشفة في المكتبة
+      </button>
+
+      <button *ngIf="currentStep === 3" (click)="printMemo()" 
+              class="px-6 py-3 border border-dark-600 text-white rounded-xl hover:bg-dark-800 transition-all font-bold flex items-center gap-2 RTL">
+        <i class="pi pi-print"></i>
+        طباعة
+      </button>
+
       <button *ngIf="currentStep === 3" (click)="save()" 
               [disabled]="isLoading"
-              class="px-12 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-500/20 transition-all font-bold flex items-center gap-2 animate-in slide-in-from-right-1 duration-300 RTL">
+              class="px-10 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-500/20 transition-all font-bold flex items-center gap-2 animate-in slide-in-from-right-1 duration-300 RTL">
         <i class="pi" [ngClass]="isLoading ? 'pi-spin pi-spinner' : 'pi-save'"></i>
         حفظ الملف بالكامل
       </button>
